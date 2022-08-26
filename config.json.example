@@ -2,4 +2,13 @@
   "discord_bot_token": "EDIT ME",
   "trakt_client_id": "EDIT ME",
   "trakt_client_secret": "EDIT ME"
+  "trakt_username": "EDIT ME",
+  "lists": {
+    "movie": "TRAKT LIST NAME",
+    "anime": "TRAKT LIST NAME",
+    "show": "TRAKT LIST NAME",
+    "animation": "TRAKT LIST NAME",
+    "cartoon": "TRAKT LIST NAME"
+  },
+  "bot_channel_id": "EDIT ME"
 }
