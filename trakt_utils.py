@@ -26,7 +26,8 @@ class Trakt:
         self.HEADERS = {
             "Content-type": "application/json",
             "trakt-api-key": self.trakt_client_id,
-            "trakt-api-version": "2"
+            "trakt-api-version": "2",
+            "Authorization": f'Bearer {self.access_token}'
         }
 
 
@@ -102,19 +103,34 @@ class Trakt:
         return r.json()
 
 
+    def add_to_list(self, category, query_name):
+        type = ""
+        if category == "movie" or category == "animation":
+            type = "movie"
+        else:
+            type = "show"
 
-def check_trakt_url(url):
-    request = requests.get(url=url)
-    if(request.status_code == 200):
-        return True
-    elif(request.status_code == 404):
-        return False
-    else:
-        print(request.status_code)
+ 
+        query = self.search(type, query_name)
+        query_id = query[0][type]['ids']['trakt']
+        query_name = query[0][type]['title']
+        item = {
+            f'{type}s': [
+                {
+                    "ids":{
+                        "trakt": query_id
+                    }
+                }
+            ] 
+        }
 
+        list_url = f'{self.TRAKT_API_URL}/users/{self.username}/lists/{self.lists[category]}/items'
 
-def add_to_trakt_list(list, url):
-    if(list in lists):
-        pass   
-    return "List not found"
+        r = requests.post(url=list_url, json=item, headers=self.HEADERS)
 
+        if r.status_code >= 200 and r.status_code < 300:
+            return f'{query_name} added to {self.lists[category]}'
+        elif r.status_code >= 400:
+            return f'Status code {r.status_code}: {r.reason}'
+
+        
