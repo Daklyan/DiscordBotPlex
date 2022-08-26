@@ -36,7 +36,7 @@ class Trakt:
         data_device_code = r.json()
 
         # User confirm connection with his browser / phone
-        input(f'Enter {data_device_code["user_code"]} at https://trakt.tv/activate then press any key...')
+        input(f'Enter {data_device_code["user_code"]} at https://trakt.tv/activate then press the Enter key...')
 
         # Exchanging authorization code with access token
         token_body = {
@@ -96,7 +96,7 @@ class Trakt:
 
 
     def search(self, category, query):
-        if(category != "movie" or category != "show"):
+        if(category != "movie" and category != "show"):
             return -1
         r = requests.get(url=f'{self.TRAKT_API_URL}/search/{category}?query={query}', headers=self.HEADERS)
         return r.json()
