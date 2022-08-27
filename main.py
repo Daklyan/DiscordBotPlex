@@ -24,26 +24,33 @@ class MyClient(discord.Client):
             command = message.content.split(" ", 2)
             if command[0] == "!add":
                 if command[1] == "help":
-                    await message.channel.send("Syntax for !add\n"
-                                                   + "```"
-                                                   + "!add category name\n"
-                                                   + "category: movie, animation, show, anime, cartoon\n"
-                                                   + "name: name of the item you want to add\n"
-                                                   + "```")
+                    embed_message = discord.Embed(title="Syntax for !add", 
+                                                  description="!add category name\ncategory: movie, animation, show, anime, cartoon\nname: name of the item you want to add",
+                                                  color=discord.Colour.yellow())
+                    await message.channel.send(embed=embed_message)
+                    return
 
                 if command[1] in trakt.lists and len(command) == 3:
-                    res = trakt.add_to_list(command[1], command[2])
-                    await message.channel.send(res)
+                    res, trakt_url = trakt.add_to_list(command[1], command[2])
+                    if trakt_url:
+                        embed_message = discord.Embed(title="Item added",
+                                                      description=res,
+                                                      url=trakt_url,
+                                                      color=discord.Colour.green())
+                    else:
+                        embed_message = discord.Embed(title="Something wrong I can feel it",
+                                                      description=res,
+                                                      color=discord.Colour.red())
+                    await message.channel.send(embed=embed_message)
                 elif not command[1] in trakt.lists:
-                    await message.channel.send("```\n"
-                                               + f"{command[1]} category not in system"
-                                               + "```")
-        # await message.channel.send("toast")
+                    embed_message = discord.Embed(title="Error",
+                                                  description=f"{command[1]} category not found",
+                                                  color=discord.Colour.red())
+                    await message.channel.send(embed=embed_message)
 
 
 intents = discord.Intents.default()
 intents.message_content = True
-# tmp = trakt.search("movie", "shrek")
 
 client = MyClient(intents=intents)
 client.run(token)
