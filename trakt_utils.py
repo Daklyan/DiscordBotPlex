@@ -129,7 +129,8 @@ class Trakt:
         r = requests.post(url=list_url, json=item, headers=self.HEADERS)
 
         if r.status_code >= 200 and r.status_code < 300:
-            return f'{query_name} added to {self.lists[category]}', self.generate_trakt_url(type, query[0][type]['ids']['slug'])
+            return query[0], self.generate_trakt_url(type, query[0][type]['ids']['slug'])
+            # return f'{query_name} added to {self.lists[category]}', self.generate_trakt_url(type, query[0][type]['ids']['slug'])
         elif r.status_code >= 400:
             return f'Status code {r.status_code}: {r.reason}', None
 
