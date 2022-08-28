@@ -69,6 +69,31 @@ client = MyClient()
 tree = app_commands.CommandTree(client)
 
 # Slash commands
+
+# Commands list
+@tree.command(name="commands")
+async def self(interaction: discord.Interaction):
+    embed_message = discord.Embed(title="Command list",
+                                  description="Show available commands on this bot",
+                                  timestamp=datetime.datetime.now(),
+                                  color=discord.Colour.yellow())
+    embed_message.add_field(name="commands", inline=True, value="List all commands available on this bot")
+    
+    # Empty fields
+    embed_message.add_field(name="\u200B", value="\u200B", inline=True)
+    embed_message.add_field(name="\u200B", value="\u200B", inline=True)
+    
+    embed_message.add_field(name="add", inline=True, value="Add an item to a trakt list\ncategory: trakt list name (available: anime, show, movie, animation, cartoon) you want to add to\nquery: name of the item you want to add")
+    
+    # Empty fields
+    embed_message.add_field(name="\u200B", value="\u200B", inline=True)
+    embed_message.add_field(name="\u200B", value="\u200B", inline=True)
+    
+    embed_message.add_field(name="remove", inline=True, value="Remove an item from a trakt list\ncategory: trakt list name (available: anime, show, movie, animation, cartoon) you want to remove from\nquery: name of the item you want to remove")
+    await interaction.response.send_message(embed=embed_message)
+
+
+# Add command
 @tree.command(name="add", description="Add query item to Trakt list")
 async def self(interaction: discord.Interaction, category: str, query: str):
     type = ""
@@ -100,6 +125,7 @@ async def self(interaction: discord.Interaction, category: str, query: str):
         await interaction.response.send_message(embed=embed_message)
 
 
+# Remove command
 @tree.command(name="remove", description="Remove item from Trakt list")
 async def self(interaction: discord.Interaction, category: str, query:str):
     type = ""
@@ -112,7 +138,7 @@ async def self(interaction: discord.Interaction, category: str, query:str):
         res, trakt_url = trakt.remove_from_list(category, query)
         if trakt_url:
             embed_message = discord.Embed(title=res[type]['title'],
-                                          description=f'{res[type]["title"]} has been remove from {trakt.lists[category]}',
+                                          description=f'{res[type]["title"]} has been removed from {trakt.lists[category]}',
                                           url=trakt_url,
                                           timestamp=datetime.datetime.now(),
                                           color=discord.Colour.green())
