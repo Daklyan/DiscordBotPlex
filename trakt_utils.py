@@ -58,10 +58,18 @@ class Trakt:
             "refresh_token": self.refresh_token,
             "expire_date": self.expire_date
         }
-
+        
         file_data_json = json.dumps(file_data)
         with open("token_data.json", "w") as f:
             f.write(file_data_json)
+        
+        # Updating headers variable
+        self.HEADERS = {
+            "Content-type": "application/json",
+            "trakt-api-key": self.trakt_client_id,
+            "trakt-api-version": "2",
+            "Authorization": f'Bearer {self.access_token}'
+        }
 
         return r.status_code
 
@@ -93,6 +101,15 @@ class Trakt:
         file_data_json = json.dumps(file_data)
         with open("token_data.json", "w") as f:
             f.write(file_data_json)
+        
+        # Updating headers variable
+        self.HEADERS = {
+            "Content-type": "application/json",
+            "trakt-api-key": self.trakt_client_id,
+            "trakt-api-version": "2",
+            "Authorization": f'Bearer {self.access_token}'
+        }
+
         return r.status_code
 
 
@@ -109,15 +126,13 @@ class Trakt:
             type = "movie"
         else:
             type = "show"
-
  
         query = self.search(type, query_name)
         query_id = query[0][type]['ids']['trakt']
-        query_name = query[0][type]['title']
         item = {
             f'{type}s': [
                 {
-                    "ids":{
+                    "ids": {
                         "trakt": query_id
                     }
                 }
@@ -129,11 +144,43 @@ class Trakt:
         r = requests.post(url=list_url, json=item, headers=self.HEADERS)
 
         if r.status_code >= 200 and r.status_code < 300:
-            return query[0], self.generate_trakt_url(type, query[0][type]['ids']['slug'])
+            return query[0], generate_trakt_url(type, query[0][type]['ids']['slug'])
             # return f'{query_name} added to {self.lists[category]}', self.generate_trakt_url(type, query[0][type]['ids']['slug'])
         elif r.status_code >= 400:
             return f'Status code {r.status_code}: {r.reason}', None
 
 
-    def generate_trakt_url(self, type, slug):
-        return f'https://trakt.tv/{type}s/{slug}'
+    def remove_from_list(self, category, query_name):
+        type = ""
+        if category == "movie" or category == "animation":
+            type = "movie"
+        else:
+            type = "show"
+
+        query = self.search(type, query_name)
+        query_id = query[0][type]['ids']['trakt']
+        item = {
+            f'{type}s': [
+                {
+                    'ids': {
+                        'trakt': query_id
+                    }
+                }
+            ]
+        }
+
+        list_url = f'{self.TRAKT_API_URL}/users/{self.username}/lists/{self.lists[category]}/items/remove'
+
+        r = requests.post(url=list_url, json=item, headers=self.HEADERS)
+
+        if r.status_code >= 200 and r.status_code < 300:
+            return query[0], generate_trakt_url(type, query[0][type]['ids']['slug'])
+        elif r.status_code >= 400:
+            return f'Status code {r.status_code}: {r.reason}', None
+
+        elif r.status_code >= 400:
+            return f'Status code {r.status_code}: {r.reason}', None
+
+
+def generate_trakt_url(type, slug):
+    return f'https://trakt.tv/{type}s/{slug}'

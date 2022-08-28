@@ -99,4 +99,36 @@ async def self(interaction: discord.Interaction, category: str, query: str):
         embed_message.set_author(name="Add item", icon_url=trakt_logo_url)
         await interaction.response.send_message(embed=embed_message)
 
+
+@tree.command(name="remove", description="Remove item from Trakt list")
+async def self(interaction: discord.Interaction, category: str, query:str):
+    type = ""
+    if category == 'movie' or category == 'animation':
+        type = 'movie'
+    else:
+        type = 'show'
+
+    if category in trakt.lists:
+        res, trakt_url = trakt.remove_from_list(category, query)
+        if trakt_url:
+            embed_message = discord.Embed(title=res[type]['title'],
+                                          description=f'{res[type]["title"]} has been remove from {trakt.lists[category]}',
+                                          url=trakt_url,
+                                          timestamp=datetime.datetime.now(),
+                                          color=discord.Colour.green())
+        else:
+            embed_message = discord.Embed(title="Something's wrong I can feel it",
+                                          description=res,
+                                          timestamp=datetime.datetime.now(),
+                                          color=discord.Colour.red())
+        embed_message.set_author(name="Remove item", icon_url=trakt_logo_url)
+        await interaction.response.send_message(embed=embed_message)
+    elif not category in trakt.lists:
+        embed_message = discord.Embed(title="Something's wrong I can feel it",
+                                      description=f'{category} category was not found',
+                                      timestamp=datetime.datetime.now(),
+                                      color=discord.Colour.red())
+        embed_message.set_author(name="Remove item", icon_url=trakt_logo_url)
+        await interaction.response.send_message(embed=embed_message)
+
 client.run(token)
