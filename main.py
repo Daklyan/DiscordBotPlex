@@ -1,6 +1,7 @@
 import json
 import discord
 import time
+import datetime
 
 from trakt_utils import Trakt
 from discord import app_commands
@@ -11,6 +12,7 @@ with open('config.json') as f:
     channel_id = data['bot_channel_id']
 
 current_timestamp = time.time()
+trakt_logo_url = "https://trakt.tv/assets/logos/header@2x-d6926a2c93734bee72c5813819668ad494dbbda651457cd17d15d267bc75c657.png"
 
 # Trakt
 trakt = Trakt()
@@ -69,25 +71,32 @@ tree = app_commands.CommandTree(client)
 # Slash commands
 @tree.command(name="add", description="Add query item to Trakt list")
 async def self(interaction: discord.Interaction, category: str, query: str):
+    type = ""
+    if category == 'movie' or category == 'animation':
+        type = "movie"
+    else:
+        type = "show"
     if category in trakt.lists:
         res, trakt_url = trakt.add_to_list(category, query)
         if trakt_url:
-            embed_message = discord.Embed(title="Item added",
-                                          description=res,
+            embed_message = discord.Embed(title=res[type]['title'],
+                                          description=f'{res[type]["title"]} has been added to {trakt.lists[category]}',
                                           url=trakt_url,
+                                          timestamp=datetime.datetime.now(),
                                           color=discord.Colour.green())
         else:
             embed_message = discord.Embed(title="Something's wrong I can feel it",
                                           description=res,
+                                          timestamp=datetime.datetime.now(),
                                           color=discord.Colour.red())
-        embed_message.set_author(name="Add item")
+        embed_message.set_author(name="Add item", icon_url=trakt_logo_url)
         await interaction.response.send_message(embed=embed_message)
     elif not category in trakt.lists:
         embed_message = discord.Embed(title="Something's wrong I can feel it",
                                       description=f'{category} category not found',
+                                      timestamp=datetime.datetime.now(),
                                       color=discord.Colour.red())
-        embed_message.set_author(name="Add item")
+        embed_message.set_author(name="Add item", icon_url=trakt_logo_url)
         await interaction.response.send_message(embed=embed_message)
-
 
 client.run(token)
