@@ -1,5 +1,6 @@
 import json
 import requests
+import time
 
 class Trakt:
     def __init__(self):
@@ -180,6 +181,14 @@ class Trakt:
 
         elif r.status_code >= 400:
             return f'Status code {r.status_code}: {r.reason}', None
+
+            
+    def check_access_token(self):
+        current_timestamp = time.time()
+        if self.access_token and current_timestamp >= self.expire_date:
+            self.refresh_login()
+        elif not self.access_token:
+            self.login()
 
 
 def generate_trakt_url(type, slug):

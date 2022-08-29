@@ -1,6 +1,5 @@
 import json
 import discord
-import time
 import datetime
 
 from trakt_utils import Trakt
@@ -11,15 +10,10 @@ with open('config.json') as f:
     token = data['discord_bot_token']
     channel_id = data['bot_channel_id']
 
-current_timestamp = time.time()
 trakt_logo_url = "https://trakt.tv/assets/logos/header@2x-d6926a2c93734bee72c5813819668ad494dbbda651457cd17d15d267bc75c657.png"
 
 # Trakt
 trakt = Trakt()
-if not trakt.access_token:
-    trakt.login()
-elif(trakt.access_token and current_timestamp >= trakt.expire_date):
-    trakt.refresh_login()
 
 class MyClient(discord.Client):
     def __init__(self):
@@ -96,6 +90,7 @@ async def self(interaction: discord.Interaction):
 # Add command
 @tree.command(name="add", description="Add query item to Trakt list")
 async def self(interaction: discord.Interaction, category: str, query: str):
+    trakt.check_access_token()
     type = ""
     if category == 'movie' or category == 'animation':
         type = "movie"
@@ -128,6 +123,7 @@ async def self(interaction: discord.Interaction, category: str, query: str):
 # Remove command
 @tree.command(name="remove", description="Remove item from Trakt list")
 async def self(interaction: discord.Interaction, category: str, query:str):
+    trakt.check_access_token()
     type = ""
     if category == 'movie' or category == 'animation':
         type = 'movie'
