@@ -94,10 +94,12 @@ async def self(interaction: discord.Interaction, category: str, query: str):
                                           url=trakt_url,
                                           timestamp=datetime.datetime.now(),
                                           color=discord.Colour.green())
+
+            embed_message.set_image(url=res[type]['artwork'])
             embed_message.add_field(name="Description", value=res[type]['summary'], inline=False)
 
             embed_message.add_field(name="Year", value=res[type]['year'], inline=True)
-            embed_message.add_field(name="Rating", value=f'{round(res[type]["rating"],2)} / 10', inline=True)
+            embed_message.add_field(name="Rating", value=f'{round(res[type]["rating"],2)} / 10', inline=True) 
             if type == "movie":   
                 embed_message.add_field(name="Runtime", value=runtime_calc(res[type]['runtime']), inline=True)
             else:

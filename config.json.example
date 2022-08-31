@@ -1,7 +1,8 @@
 {
   "discord_bot_token": "EDIT ME",
+  "fanart_tv_api_key": "EDIT ME",
   "trakt_client_id": "EDIT ME",
-  "trakt_client_secret": "EDIT ME"
+  "trakt_client_secret": "EDIT ME",
   "trakt_username": "EDIT ME",
   "lists": {
     "movie": "TRAKT LIST NAME",

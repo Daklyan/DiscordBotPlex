@@ -5,6 +5,7 @@ import time
 class Trakt:
     def __init__(self):
         self.TRAKT_API_URL = "https://api.trakt.tv"
+        self.FANART_TV_URL = "https://webservice.fanart.tv/v3"
         self.access_token = ""
         self.refresh_token = ""
         self.expire_date = 0
@@ -14,6 +15,7 @@ class Trakt:
             self.trakt_client_secret = data['trakt_client_secret']
             self.lists = data['lists']
             self.username = data['trakt_username']
+            self.fanart_tv_api_key = data['fanart_tv_api_key']
 
         try:
             with open('token_data.json') as f:
@@ -148,12 +150,15 @@ class Trakt:
         
         if type == "movie":
             query[0][type]['runtime'] = query_summary["runtime"]
+            tmdb_tvdb_id = query[0][type]['ids']['tmdb']
         else: 
             seasons_url = f'{self.TRAKT_API_URL}/{type}s/{query_id}/seasons'
             r = requests.get(url=seasons_url, headers=self.HEADERS)
             query_seasons = r.json()
             query[0][type]["nb_seasons"] = query_seasons[-1]["number"]
+            tmdb_tvdb_id = query[0][type]['ids']['tvdb']
 
+        query[0][type]["artwork"] = self.get_item_artwork(tmdb_tvdb_id, category)
         list_url = f'{self.TRAKT_API_URL}/users/{self.username}/lists/{self.lists[category]}/items'
         r = requests.post(url=list_url, json=item, headers=self.HEADERS)
 
@@ -195,7 +200,24 @@ class Trakt:
         elif r.status_code >= 400:
             return f'Status code {r.status_code}: {r.reason}', None
 
-            
+
+    def get_item_artwork(self, id, category):
+        type = ""
+        if category == "movie" or category == "animation":
+            type = "movies"
+        else:
+            type = "tv"
+
+        url = f'{self.FANART_TV_URL}/{type}/{id}?api_key={self.fanart_tv_api_key}'
+        r = requests.get(url=url)
+        data = r.json()
+        
+        if type == "movies":
+            return data["moviebackground"][0]["url"]
+        else:
+            return data["showbackground"][0]["url"]
+
+
     def check_access_token(self):
         current_timestamp = time.time()
         if self.access_token and current_timestamp >= self.expire_date:
