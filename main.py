@@ -71,19 +71,9 @@ async def self(interaction: discord.Interaction):
                                   description="Show available commands on this bot",
                                   timestamp=datetime.datetime.now(),
                                   color=discord.Colour.yellow())
-    embed_message.add_field(name="commands", inline=True, value="List all commands available on this bot")
-    
-    # Empty fields
-    embed_message.add_field(name="\u200B", value="\u200B", inline=True)
-    embed_message.add_field(name="\u200B", value="\u200B", inline=True)
-    
-    embed_message.add_field(name="add", inline=True, value="Add an item to a trakt list\ncategory: trakt list name (available: anime, show, movie, animation, cartoon) you want to add to\nquery: name of the item you want to add")
-    
-    # Empty fields
-    embed_message.add_field(name="\u200B", value="\u200B", inline=True)
-    embed_message.add_field(name="\u200B", value="\u200B", inline=True)
-    
-    embed_message.add_field(name="remove", inline=True, value="Remove an item from a trakt list\ncategory: trakt list name (available: anime, show, movie, animation, cartoon) you want to remove from\nquery: name of the item you want to remove")
+    embed_message.add_field(name="commands", inline=False, value="List all commands available on this bot")
+    embed_message.add_field(name="add", inline=False, value="Add an item to a trakt list\ncategory: trakt list name (available: anime, show, movie, animation, cartoon) you want to add to\nquery: name of the item you want to add")
+    embed_message.add_field(name="remove", inline=False, value="Remove an item from a trakt list\ncategory: trakt list name (available: anime, show, movie, animation, cartoon) you want to remove from\nquery: name of the item you want to remove")
     await interaction.response.send_message(embed=embed_message)
 
 
@@ -104,6 +94,14 @@ async def self(interaction: discord.Interaction, category: str, query: str):
                                           url=trakt_url,
                                           timestamp=datetime.datetime.now(),
                                           color=discord.Colour.green())
+            embed_message.add_field(name="Description", value=res[type]['summary'], inline=False)
+
+            embed_message.add_field(name="Year", value=res[type]['year'], inline=True)
+            embed_message.add_field(name="Rating", value=f'{round(res[type]["rating"],2)} / 10', inline=True)
+            if type == "movie":   
+                embed_message.add_field(name="Runtime", value=runtime_calc(res[type]['runtime']), inline=True)
+            else:
+                embed_message.add_field(name="Number of seasons", value=res[type]['nb_seasons'], inline=True)
         else:
             embed_message = discord.Embed(title="Something's wrong I can feel it",
                                           description=res,
@@ -136,7 +134,7 @@ async def self(interaction: discord.Interaction, category: str, query:str):
             embed_message = discord.Embed(title=res[type]['title'],
                                           description=f'{res[type]["title"]} has been removed from {trakt.lists[category]}',
                                           url=trakt_url,
-                                          timestamp=datetime.datetime.now(),
+        timestamp=datetime.datetime.now(),
                                           color=discord.Colour.green())
         else:
             embed_message = discord.Embed(title="Something's wrong I can feel it",
@@ -152,5 +150,9 @@ async def self(interaction: discord.Interaction, category: str, query:str):
                                       color=discord.Colour.red())
         embed_message.set_author(name="Remove item", icon_url=trakt_logo_url)
         await interaction.response.send_message(embed=embed_message)
+
+
+def runtime_calc(minutes):
+    return ('%02dh%02d' % (divmod(minutes, 60)))
 
 client.run(token)

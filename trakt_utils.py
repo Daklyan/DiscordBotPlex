@@ -139,9 +139,22 @@ class Trakt:
                 }
             ] 
         }
+        
+        summary_url = f'{self.TRAKT_API_URL}/{type}s/{query_id}?extended=full'
+        r = requests.get(url=summary_url, headers=self.HEADERS)
+        query_summary = r.json()
+        query[0][type]['summary'] = query_summary["overview"]
+        query[0][type]['rating'] = query_summary["rating"]
+        
+        if type == "movie":
+            query[0][type]['runtime'] = query_summary["runtime"]
+        else: 
+            seasons_url = f'{self.TRAKT_API_URL}/{type}s/{query_id}/seasons'
+            r = requests.get(url=seasons_url, headers=self.HEADERS)
+            query_seasons = r.json()
+            query[0][type]["nb_seasons"] = query_seasons[-1]["number"]
 
         list_url = f'{self.TRAKT_API_URL}/users/{self.username}/lists/{self.lists[category]}/items'
-
         r = requests.post(url=list_url, json=item, headers=self.HEADERS)
 
         if r.status_code >= 200 and r.status_code < 300:
