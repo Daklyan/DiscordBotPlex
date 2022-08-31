@@ -213,9 +213,9 @@ class Trakt:
         data = r.json()
        
         if type == "movies":
-            return data["moviebackground"][0]["url"] if data["moviebackground"] else None
+            return data["moviebackground"][0]["url"] if "moviebackground" in data else None
         else:
-            return data["showbackground"][0]["url"] if data["showbackground"] else None
+            return data["showbackground"][0]["url"] if "showbackground" in data else None
 
 
     def check_access_token(self):
