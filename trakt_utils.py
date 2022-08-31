@@ -211,11 +211,11 @@ class Trakt:
         url = f'{self.FANART_TV_URL}/{type}/{id}?api_key={self.fanart_tv_api_key}'
         r = requests.get(url=url)
         data = r.json()
-        
+       
         if type == "movies":
-            return data["moviebackground"][0]["url"]
+            return data["moviebackground"][0]["url"] if data["moviebackground"] else None
         else:
-            return data["showbackground"][0]["url"]
+            return data["showbackground"][0]["url"] if data["showbackground"] else None
 
 
     def check_access_token(self):
