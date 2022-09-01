@@ -132,6 +132,10 @@ class Trakt:
  
         query = self.search(type, query_name)
         query_id = query[0][type]['ids']['trakt']
+       
+        if self.check_item_in_list(query_id, category, type):
+            return f'{query[0][type]["title"]} is already in {self.lists[category]}, can\'t add it', None
+        
         item = {
             f'{type}s': [
                 {
@@ -178,6 +182,10 @@ class Trakt:
 
         query = self.search(type, query_name)
         query_id = query[0][type]['ids']['trakt']
+
+        if not self.check_item_in_list(query_id, category, type):
+            return f'{query[0][type]["title"]} is not in {self.lists[category]}, can\'t remove it', None
+
         item = {
             f'{type}s': [
                 {
@@ -224,6 +232,16 @@ class Trakt:
             self.refresh_login()
         elif not self.access_token:
             self.login()
+
+    
+    def check_item_in_list(self, id, category, type):
+        url = f'{self.TRAKT_API_URL}/users/{self.username}/lists/{self.lists[category]}/items/{type}'
+        r = requests.get(url=url, headers=self.HEADERS)
+        data = r.json()
+        if any(item[type]['ids']['trakt'] == id for item in data):
+            return True
+        else:
+            return False
 
 
 def generate_trakt_url(type, slug):
