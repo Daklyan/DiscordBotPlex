@@ -123,17 +123,17 @@ class Trakt:
         return r.json()
 
 
-    def add_to_list(self, category, query_name):
+    def add_to_list(self, category, query_name, index=0):
         if category == "movie" or category == "animation":
             type = "movie"
         else:
             type = "show"
  
         query = self.search(type, query_name)
-        query_id = query[0][type]['ids']['trakt']
+        query_id = query[index][type]['ids']['trakt']
        
         if self.check_item_in_list(query_id, category, type):
-            return f'{query[0][type]["title"]} is already in {self.lists[category]}, can\'t add it', None
+            return f'{query[index][type]["title"]} is already in {self.lists[category]}, can\'t add it', None
         
         item = {
             f'{type}s': [
@@ -148,25 +148,25 @@ class Trakt:
         summary_url = f'{self.TRAKT_API_URL}/{type}s/{query_id}?extended=full'
         r = requests.get(url=summary_url, headers=self.HEADERS)
         query_summary = r.json()
-        query[0][type]['summary'] = query_summary["overview"]
-        query[0][type]['rating'] = query_summary["rating"]
+        query[index][type]['summary'] = query_summary["overview"]
+        query[index][type]['rating'] = query_summary["rating"]
         
         if type == "movie":
             query[0][type]['runtime'] = query_summary["runtime"]
-            tmdb_tvdb_id = query[0][type]['ids']['tmdb']
+            tmdb_tvdb_id = query[index][type]['ids']['tmdb']
         else: 
             seasons_url = f'{self.TRAKT_API_URL}/{type}s/{query_id}/seasons'
             r = requests.get(url=seasons_url, headers=self.HEADERS)
             query_seasons = r.json()
-            query[0][type]["nb_seasons"] = query_seasons[-1]["number"]
-            tmdb_tvdb_id = query[0][type]['ids']['tvdb']
+            query[index][type]["nb_seasons"] = query_seasons[-1]["number"]
+            tmdb_tvdb_id = query[index][type]['ids']['tvdb']
 
-        query[0][type]["artwork"] = self.get_item_artwork(tmdb_tvdb_id, category)
+        query[index][type]["artwork"] = self.get_item_artwork(tmdb_tvdb_id, category)
         list_url = f'{self.TRAKT_API_URL}/users/{self.username}/lists/{self.lists[category]}/items'
         r = requests.post(url=list_url, json=item, headers=self.HEADERS)
 
         if r.status_code >= 200 and r.status_code < 300:
-            return query[0], generate_trakt_url(type, query[0][type]['ids']['slug'])
+            return query[index], generate_trakt_url(type, query[index][type]['ids']['slug'])
             # return f'{query_name} added to {self.lists[category]}', self.generate_trakt_url(type, query[0][type]['ids']['slug'])
         elif r.status_code >= 400:
             return f'Status code {r.status_code}: {r.reason}', None

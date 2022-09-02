@@ -1,6 +1,7 @@
 import json
 import discord
 import datetime
+import base64
 
 from trakt_utils import Trakt
 from discord import app_commands
@@ -87,7 +88,7 @@ class SelectMenu(Select):
             else:
                 type = 'show'
             if self.category in trakt.lists:
-                res, trakt_url = trakt.add_to_list(self.category, self.query)
+                res, trakt_url = trakt.add_to_list(self.category, self.query, int(self.values[0]))
                 if trakt_url:
                     embed_message = discord.Embed(title=res[type]['title'],
                                                   description=f'{res[type]["title"]} has been added to {trakt.lists[self.category]}',
@@ -224,16 +225,11 @@ async def self(interaction: discord.Interaction, category: str, query:str):
 
     # TODO improve loop
     for i in range(len(query_r)):
-        select.add_option(label=f'{query_r[i][type]["title"]} ({query_r[i][type]["year"]})', value=f"test {i}", emoji="✅")
+        select.add_option(label=f'{query_r[i][type]["title"]} ({query_r[i][type]["year"]})', value=i, emoji="✅")
     select.add_option(label='Cancel', value="Cancel", emoji='❌')
     select.callback(interaction)
-    #view.add_item(select)
     await interaction.response.send_message(view=view)
    
-    #if len(select.values) > 0:
-     #   await interaction.edit_original_response(content=select.values[0])
-    # await interaction.edit_original_response(content="toast", view=view.clear_items())
-
 
 def runtime_calc(minutes):
     return ('%02dh%02d' % (divmod(minutes, 60)))
