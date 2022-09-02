@@ -4,6 +4,7 @@ import datetime
 
 from trakt_utils import Trakt
 from discord import app_commands
+from discord.ui import View, Select
 
 with open('config.json') as f:
     data = json.load(f)
@@ -27,7 +28,8 @@ class MyClient(discord.Client):
             await tree.sync()
             self.synced = True
         print(f'Logged as {self.user}')
-        
+
+
         # Legacy way to handle command
         async def on_message(self, message):
             if message.channel.id == int(channel_id) and message.content.startswith('!'):
@@ -59,6 +61,62 @@ class MyClient(discord.Client):
                         await message.channel.send(embed=embed_message)
 
 
+class ViewMenu(View):
+    def __init__(self, select, *, timeout=60):
+        super().__init__(timeout=timeout)
+        self.add_item(select)
+
+
+class SelectMenu(Select):
+    def __init__(self, category, query):
+        super().__init__(placeholder="Pick an item",
+                         min_values=1,
+                         max_values=1)
+        self.category = category
+        self.query = query
+
+    async def callback(self, interaction: discord.Interaction):
+        if self.values[0] == "Cancel":
+            embed_message = discord.Embed(title="Search",
+                                  description="Search has been canceled",
+                                  timestamp=datetime.datetime.now(),
+                                  color=discord.Colour.orange())
+        else:
+            if self.category == 'movie' or self.category == 'animation':
+                type = 'movie'
+            else:
+                type = 'show'
+            if self.category in trakt.lists:
+                res, trakt_url = trakt.add_to_list(self.category, self.query)
+                if trakt_url:
+                    embed_message = discord.Embed(title=res[type]['title'],
+                                                  description=f'{res[type]["title"]} has been added to {trakt.lists[self.category]}',
+                                                  url=trakt_url,
+                                                  timestamp=datetime.datetime.now(),
+                                                  color=discord.Colour.green())
+                    embed_message.set_image(url=res[type]['artwork'])
+                    embed_message.add_field(name="Description", value=res[type]['summary'], inline=False)
+                    embed_message.add_field(name="Year", value=res[type]['year'], inline=True)
+                    embed_message.add_field(name="Rating", value=f'{round(res[type]["rating"], 2)} / 10', inline=True)
+
+                    if type == 'movie':
+                        embed_message.add_field(name="Runtime", value=runtime_calc(res[type]['runtime']), inline=True)
+                    else:
+                        embed_message.add_field(name="Number of seasons", value=res[type]['nb_seasons'], inline=True)
+                else:
+                    embed_message = discord.Embed(title="Something's wrong I can feel it",
+                                                  description=res,
+                                                  timestamp=datetime.datetime.now(),
+                                                  color=discord.Colour.red())
+                embed_message.set_author(name="Search then add item", icon_url=trakt_logo_url)
+            elif not category in trakt.lists:
+                embed_message = discord.Embed(title="Something's wrong I can feel it",
+                                              description=f'{self.category} category not found',
+                                              timestamp=datetime.datetime.now(),
+                                              color=discord.Colour.red())
+                embed_message.set_author(name="Search then add item", icon_url=trakt_logo_url)
+        await interaction.response.edit_message(embed=embed_message, view=None)
+
 client = MyClient()
 tree = app_commands.CommandTree(client)
 
@@ -81,7 +139,6 @@ async def self(interaction: discord.Interaction):
 @tree.command(name="add", description="Add query item to Trakt list")
 async def self(interaction: discord.Interaction, category: str, query: str):
     trakt.check_access_token()
-    type = ""
     if category == 'movie' or category == 'animation':
         type = "movie"
     else:
@@ -124,7 +181,6 @@ async def self(interaction: discord.Interaction, category: str, query: str):
 @tree.command(name="remove", description="Remove item from Trakt list")
 async def self(interaction: discord.Interaction, category: str, query:str):
     trakt.check_access_token()
-    type = ""
     if category == 'movie' or category == 'animation':
         type = 'movie'
     else:
@@ -152,6 +208,31 @@ async def self(interaction: discord.Interaction, category: str, query:str):
                                       color=discord.Colour.red())
         embed_message.set_author(name="Remove item", icon_url=trakt_logo_url)
         await interaction.response.send_message(embed=embed_message)
+
+
+@tree.command(name="search_then_add", description="Search and let the user select item before adding it to list")
+async def self(interaction: discord.Interaction, category: str, query:str):
+    trakt.check_access_token()
+    if category == 'movie' or category == 'animation':
+        type = 'movie'
+    else:
+        type = 'show'
+
+    query_r = trakt.search(type, query)[0:5]
+    select = SelectMenu(category, query)
+    view = ViewMenu(select=select)
+
+    # TODO improve loop
+    for i in range(len(query_r)):
+        select.add_option(label=f'{query_r[i][type]["title"]} ({query_r[i][type]["year"]})', value=f"test {i}", emoji="✅")
+    select.add_option(label='Cancel', value="Cancel", emoji='❌')
+    select.callback(interaction)
+    #view.add_item(select)
+    await interaction.response.send_message(view=view)
+   
+    #if len(select.values) > 0:
+     #   await interaction.edit_original_response(content=select.values[0])
+    # await interaction.edit_original_response(content="toast", view=view.clear_items())
 
 
 def runtime_calc(minutes):

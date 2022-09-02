@@ -116,15 +116,14 @@ class Trakt:
         return r.status_code
 
 
-    def search(self, category, query):
-        if(category != "movie" and category != "show"):
+    def search(self, type, query):
+        if type != "movie" and type != "show":
             return -1
-        r = requests.get(url=f'{self.TRAKT_API_URL}/search/{category}?query={query}', headers=self.HEADERS)
+        r = requests.get(url=f'{self.TRAKT_API_URL}/search/{type}?query={query}', headers=self.HEADERS)
         return r.json()
 
 
     def add_to_list(self, category, query_name):
-        type = ""
         if category == "movie" or category == "animation":
             type = "movie"
         else:
@@ -174,7 +173,6 @@ class Trakt:
 
 
     def remove_from_list(self, category, query_name):
-        type = ""
         if category == "movie" or category == "animation":
             type = "movie"
         else:
@@ -210,7 +208,6 @@ class Trakt:
 
 
     def get_item_artwork(self, id, category):
-        type = ""
         if category == "movie" or category == "animation":
             type = "movies"
         else:
